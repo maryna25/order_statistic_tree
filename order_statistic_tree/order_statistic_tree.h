@@ -1,29 +1,38 @@
 #pragma once
+#include <string>
 
+struct				car_model{
+	std::string		name;
+	std::string		brand;
+	int				number;
+};
 
-template <class T>
 class RedBlackTree {
     class Node{
         Node *rightChild = nullptr;
         Node *leftChild = nullptr;
         Node *parent = nullptr;
-        T data;
+		car_model data;
         bool color;
 		int size;
     public:
         Node():data(),color(false){
         }
-        Node(T d){
+		Node(car_model d){
             data = d;
             color = true;
+			size = 1;
         }
-        T getData(){
-            return data;
+		int getData(){
+            return data.number;
         }
+		car_model getAllData(){
+			return data;
+		}
         bool isRed(){
             return color;
         }
-        void setData(T d){
+		void setData(car_model d){
             data = d;
         }
         void toBlack(){
@@ -53,7 +62,7 @@ class RedBlackTree {
             return parent->getParent();
         }
         bool isLeftChild(){
-            return bool(data <= parent->getData());
+            return bool(data.number <= parent->getData());
         }
         void setLeftChild(Node * lChild){
             leftChild = lChild;
@@ -64,6 +73,12 @@ class RedBlackTree {
         void setParent(Node * par){
             parent = par;
         }
+		void setSize(int s){
+			size = s;
+		}
+		int getSize(){
+			return size;
+		}
     }
 	
 	*root = nullptr;
@@ -234,10 +249,23 @@ class RedBlackTree {
 		int heightLeft = getHeight(startNode->getLeftChild()), heightRight = getHeight(startNode->getRightChild());
 		return (heightLeft > heightRight ? heightLeft : heightRight) + 1;
 	}
+	void showRedBlackTree(Node* startNode, int level = 0){
+		std::cout << startNode->getAllData().brand << "  " << startNode->getAllData().name << "  " << startNode->getAllData().number << std::endl;
+		if (startNode->isRed()) std::cout << "red\n";
+		else std::cout << "black\n";
+		std::cout << "size: " << startNode->getSize() << std::endl;
+		std::cout << "level: " << level << std::endl << std::endl;
+
+		level++;
+		if (startNode->getLeftChild())
+			showRedBlackTree(startNode->getLeftChild(), level);
+		if (startNode->getRightChild())
+			showRedBlackTree(startNode->getRightChild(), level);
+	}
 public:
     RedBlackTree(){
     }
-    RedBlackTree(T data){
+	RedBlackTree(car_model data){
         root = new Node(data);
         root->toBlack();
     }
@@ -253,19 +281,45 @@ public:
         leaves = 0;
     }
     
-    Node* search(T dataToSearch){
+	void setAllSize(Node* cur){
+		if (!cur->getLeftChild() && !cur->getRightChild()){
+			cur->setSize(1);
+			return;
+		}
+
+		int s = 1;
+		if (cur->getLeftChild()){
+			setAllSize(cur->getLeftChild());
+			s += cur->getLeftChild()->getSize();
+		}
+		if (cur->getRightChild()){
+			setAllSize(cur->getRightChild());
+			s += cur->getRightChild()->getSize();
+		}
+
+		cur->setSize(s);
+	}
+
+	Node* search(car_model dataToSearch){
         Node * ptrToNode = root;
         while (ptrToNode != nullptr) {
-            if (dataToSearch > ptrToNode->getData())
+            if (dataToSearch.number > ptrToNode->getData())
                 ptrToNode = ptrToNode->getRightChild();
-            else if (dataToSearch < ptrToNode->getData())
+            else if (dataToSearch.number < ptrToNode->getData())
                 ptrToNode = ptrToNode->getLeftChild();
-            else return ptrToNode;
+			else
+			{
+				if (ptrToNode != nullptr) 
+					std::cout << ptrToNode->getSize() << "  " << ptrToNode->getAllData().name << "  " << ptrToNode->getAllData().brand;
+				return ptrToNode;
+			}
         }
+		if (ptrToNode != nullptr)
+			std::cout << ptrToNode->getSize() << "  " << ptrToNode->getAllData().name << "  " << ptrToNode->getAllData().brand;
         return ptrToNode;
     }
     
-    void insert(T dataToInsert){
+	void insert(car_model dataToInsert){
         if (search(dataToInsert)) {
             return;
         }
@@ -293,10 +347,12 @@ public:
         else
             parent->setRightChild(NodeToInsert);
         insertCase1(NodeToInsert);
+
+		setAllSize(root);
         leaves++;
     }
     
-    void deleteElement(T dataToDelete){
+	void deleteElement(car_model dataToDelete){
         Node * ptrToDelete = search(dataToDelete);
         if (!ptrToDelete) {
             return;
@@ -334,10 +390,16 @@ public:
             if (child) child->setParent(parent);
         }
         delete ptrToDelete;
+
+		setAllSize(root);
         leaves -= 1;
     }
 
 	int getHeight() {
 		return getHeight(root);
+	}
+
+	void show(){
+		showRedBlackTree(root);
 	}
 };
